@@ -1,2 +1,2 @@
 # telegram_ocr
-OCR program to indefinitely scrape messages or images from telegram channel
+OCR program to scrape messages in real time or images from telegram channel
