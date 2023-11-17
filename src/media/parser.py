@@ -87,7 +87,7 @@ class MediaParser:
         image_white = self._image_processing_white_characters()
 
         # Check percentage of pixels that are white
-        if self._white_pixels_percent(image=image_white) > 90.0:
+        if self._white_pixels_percent(image=image_white) > 93.0:
             image_black = self._image_processing_black_characters()
             return image_black
         
