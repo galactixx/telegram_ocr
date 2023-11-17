@@ -6,21 +6,23 @@ from src.utils import (
     load_api_info,
     source_data_directories)
 
-(TELEGRAM_APP_ID, TELEGRAM_APP_HASH,
- TELEGRAM_PHONE_NUMBER, TELEGRAM_CHANNEL) = load_api_info()
+# Load in telegram api info
+telegram_info = load_api_info()
 
 if __name__ == "__main__":
 
     # Generate directories
-    source_data_directories(channel=TELEGRAM_CHANNEL)
+    source_data_directories(channel=telegram_info.channel)
 
     # Telegram instantiation
     telegram = TelegramOCR(
-        telegram_app_id=TELEGRAM_APP_ID,
-        telegram_app_hash=TELEGRAM_APP_HASH,
-        telegram_phone_number=TELEGRAM_PHONE_NUMBER,
+        telegram_app_id=telegram_info.app_id,
+        telegram_app_hash=telegram_info.app_hash,
+        telegram_phone_number=telegram_info.phone_number,
         openai_vision=OpenAIInterface()
     )
 
     # Download any images sent by account in question
-    asyncio.run(telegram.stream_images_in_messages(telegram_channel=TELEGRAM_CHANNEL))
+    asyncio.run(telegram.stream_images_in_messages(
+        telegram_channel=telegram_info.channel,
+        telegram_channel_to_send=telegram_info.channel_to_send))

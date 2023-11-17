@@ -1,10 +1,20 @@
 import os
 import json
-from typing import Tuple
 import base64
+import re
+from typing import Optional
 
+from dataclasses import dataclass
 import cv2
 from cv2.typing import MatLike
+
+@dataclass
+class TelegramInfo:
+    app_id: int
+    app_hash: str
+    phone_number: str
+    channel: str
+    channel_to_send: str
 
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -12,17 +22,25 @@ with open('config.json', 'r') as f:
 def _clean_channel(channel: str) -> str:
     return channel.replace('@', '')
 
-def load_api_info() -> Tuple[int, str, str, str]:
+def load_api_info() -> TelegramInfo:
     """Load in all API info from both config file and environment variables."""
 
     # Config variables
     TELEGRAM_CHANNEL = config['telegram_channel']
+    TELEGRAM_CHANNEL_TO_SEND = config['telegram_channel_to_send']
 
     # Environment variables
     TELEGRAM_APP_ID = os.environ['TELEGRAM_APP_ID']
     TELEGRAM_APP_HASH = os.environ['TELEGRAM_APP_HASH']
     TELEGRAM_PHONE_NUMBER = os.environ['TELEGRAM_PHONE_NUMBER']
-    return TELEGRAM_APP_ID, TELEGRAM_APP_HASH, TELEGRAM_PHONE_NUMBER, TELEGRAM_CHANNEL
+
+    return TelegramInfo(
+        app_id=TELEGRAM_APP_ID,
+        app_hash=TELEGRAM_APP_HASH,
+        phone_number=TELEGRAM_PHONE_NUMBER,
+        channel=TELEGRAM_CHANNEL,
+        channel_to_send=TELEGRAM_CHANNEL_TO_SEND
+    )
 
 def source_data_directory(channel: str) -> None:
     """Return source data directory."""
@@ -45,3 +63,13 @@ def encode_image(image: MatLike) -> str:
     img_base64 = base64.b64encode(img_bytes).decode('utf-8')
     
     return img_base64
+
+def parse_ocr_response(response: str) -> Optional[str]:
+    """Logic to parse and clean the OCR response."""
+    
+    # Remove non-letter characters
+    cleaned_response = re.sub('[^A-Za-z]+', '', response).strip()
+
+    # Ignore reponse if length is more than 5 letters
+    if len(cleaned_response) in range(1, 6):
+        return cleaned_response

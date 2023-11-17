@@ -1,4 +1,5 @@
 {
     "data_dir": "./data",
-    "telegram_channel": "@cryptotroia"
+    "telegram_channel": "@cryptotroia",
+    "telegram_channel_to_send": "@test_scrape_yesh"
 }

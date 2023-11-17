@@ -8,6 +8,7 @@ from src.media.loader import MediaLoader
 from src.vision.openai import OpenAIInterface
 from src.utils import (
     encode_image, 
+    parse_ocr_response,
     source_data_directory)
 
 class TelegramOCR:
@@ -42,7 +43,7 @@ class TelegramOCR:
 
         await self._client.disconnect()
 
-    async def stream_images_in_messages(self, telegram_channel: str) -> None:
+    async def stream_images_in_messages(self, telegram_channel: str, telegram_channel_to_send: str) -> None:
         """Stream messages from Telegram channel and process images."""
         path_source_data_image = source_data_directory(channel=telegram_channel)
 
@@ -81,5 +82,10 @@ class TelegramOCR:
                     response = self.openai_vision.get_vision_completion(
                         prompt='What are the largest characters in this image? Only output the text in the image.',
                         base64_image=base64_image)
+                    response_parsed = parse_ocr_response(response=response)
+
+                    # Send parsed response to telegram channel
+                    if response_parsed is not None:         
+                        await self._client.send_message(telegram_channel_to_send, response_parsed)
 
         await self._client.run_until_disconnected()
