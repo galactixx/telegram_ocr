@@ -2,83 +2,106 @@ import numpy as np
 import cv2
 from cv2.typing import MatLike
 
+from src.media.loader import MediaLoader
+
+DEFAULT_KERNEL = np.ones((3, 3), np.uint8)
+
 class MediaParser:
     """
-    Helper methods when parsing media (mp4 or images) using cv2.
+    Helper methods when parsing images using cv2.
     """
-    def __init__(self, image_path: str):
-        self._image_path = image_path
+    def __init__(self, media_loader: MediaLoader):
+        self._media_loader = media_loader
 
-        # Load in image path into cv2 and convert to gray scale
-        self.image = cv2.imread(self._image_path)
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-
-        # Median image metrics
-        self._pixel_variance = self._calculate_variance_of_pixel_intensities()
+        # Load in image path into cv2 and do basic pre-processing
+        self.image = self._basic_preprocessing()
 
         # Image processing
         self.image = self._image_processing()
 
-        # All contours in relevant image
-        self._contours = cv2.findContours(self.image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        self._contours = self._contours[0] if len(self._contours) == 2 else self._contours[1]
-        self._contour_areas = [cv2.contourArea(c) for c in self._contours]
+    def _white_pixels_percent(self, image: MatLike) -> float:
+        """Calculate percentage of white pixels in image."""
 
-    def _threshold_type(self, image: MatLike) -> int:
+        # Count the number of white pixels
+        number_of_white_pix = cv2.countNonZero(image)
+
+        # Calculate the total number of pixels
+        total_pix = image.shape[0] * image.shape[1]
+
+        # Calculate the percentage of white pixels
+        percentage = (number_of_white_pix / total_pix) * 100
+        return percentage
+
+    def _do_inversion(self, image: MatLike) -> MatLike:
         """Invert the image only if it is white characters on black background."""
 
         # Calculate the average pixel intensity
         average_intensity = np.mean(image)
 
         # Determine the thresholding type based on the average intensity
-        if average_intensity < 128:
-            threshold_type = cv2.THRESH_BINARY
-        else:
-            threshold_type = cv2.THRESH_BINARY_INV
-        return threshold_type
+        if average_intensity < 145:
+            return cv2.bitwise_not(image)
+        return image
+
+    def _image_processing_white_characters(self) -> MatLike:
+        """Image pre-processing to highlight white characters."""
+
+        # Generate threshold to highlight white characters
+        _, thresh = cv2.threshold(self.image, 245, 255, cv2.THRESH_BINARY)
+
+        # Closing on threshold
+        closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, DEFAULT_KERNEL)
+
+        # Invert black and white
+        result = self._do_inversion(image=closing)
+
+        # Erode image
+        eroded = cv2.erode(result, DEFAULT_KERNEL, iterations=1)
+        return eroded
     
-    def _calculate_variance_of_pixel_intensities(self) -> float:
-        """Calculation of variance of pixel intensities for image."""
-        _, std_dev = cv2.meanStdDev(self.image)
-        variance = std_dev[0]**2
+    def _image_processing_black_characters(self) -> MatLike:
+        """Image pre-processing to highlight black characters."""
 
-        # Normalizing by the number of pixels
-        num_pixels = self.image.shape[0] * self.image.shape[1]
-        normalized_variance = variance / num_pixels
+        # Apply thresholding if your image is not binary
+        _, thresh = cv2.threshold(self.image, 135, 255, cv2.THRESH_BINARY_INV)
 
-        return normalized_variance[0]
+        # Invert the binary image
+        inverted_image = self._do_inversion(image=thresh)
+
+        # Erode image
+        eroded = cv2.erode(inverted_image, DEFAULT_KERNEL, iterations=1)
+        return eroded
+    
+    def _basic_preprocessing(self) -> MatLike:
+        """Basic image pre-processing."""
+
+        # Apply grey scale and gaussian blur to image
+        grey = cv2.cvtColor(self._media_loader.image, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(grey, (3, 3), 0)
+        return blur
 
     def _image_processing(self) -> MatLike:
-        """Basic image pre-processing on pixel array of image."""
+        """Core image pre-processing."""
+
+        # Generate threshold to highlight white & black characters
+        image_white = self._image_processing_white_characters()
+
+        # Check percentage of pixels that are white
+        if self._white_pixels_percent(image=image_white) > 90.0:
+            image_black = self._image_processing_black_characters()
+            return image_black
         
-        # Apply Gaussian blur
-        blurred = cv2.GaussianBlur(self.image, (5, 5), 0)
-
-        # Threshold type to use
-        threshold_type = self._threshold_type(image=blurred)
-
-        # Otsu thresholding 
-        if self._pixel_variance < 0.001 or self._pixel_variance > 0.002:
-            _, thresh = cv2.threshold(blurred, 120, 255, threshold_type + cv2.THRESH_OTSU)
-
-        # Adaptive thresholding
-        else:
-            thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, threshold_type, 11, 2)
-
-        return thresh
-    
-    def remove_small_contours(self, min_percentage_of_total: float = 0.10, area_percentile: float = 90.0) -> None:
+        return image_white
+     
+    def remove_small_contours(self) -> None:
         """If needed, remove small contours from image."""
 
-        # Calculate the threshold area based on the percentage
-        percent_of_total_threshold_area = sum(self._contour_areas) * min_percentage_of_total
+        # Find contours and hierarchy
+        contours, _ = cv2.findContours(self.image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Determine the contour area threshold based on the specified percentile
-        percentile_threshold_area = np.percentile(self._contour_areas, area_percentile)
+        # Iterate through contours
+        for contour in contours:
+            area = cv2.contourArea(contour)
 
-        # Iterate through contours and determine if far enough below average to be removed
-        for c in self._contours:
-            area = cv2.contourArea(c)
-
-            if area < percent_of_total_threshold_area and area < percentile_threshold_area:
-                cv2.drawContours(self.image, [c], -1, (0,0,0), -1)
+            if area < 1000:
+                cv2.drawContours(self.image, [contour], 0, (255), -1)
