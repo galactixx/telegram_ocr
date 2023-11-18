@@ -25,4 +25,5 @@ if __name__ == "__main__":
     # Download any images sent by account in question
     asyncio.run(telegram.stream_images_in_messages(
         telegram_channel=telegram_info.channel,
-        telegram_channel_to_send=telegram_info.channel_to_send))
+        telegram_channel_to_send=telegram_info.channel_to_send,
+        telegram_channel_keywords=telegram_info.channel_keywords))

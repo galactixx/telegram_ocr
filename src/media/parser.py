@@ -4,33 +4,48 @@ from cv2.typing import MatLike
 
 from src.media.loader import MediaLoader
 
-DEFAULT_KERNEL = np.ones((3, 3), np.uint8)
+DEFAULT_KERNEL = np.ones((2, 2), np.uint8)
+WHITE_THRESHOLD = (240, 240, 240)
+LIGHT_GREY_THRESHOLD = (150, 150, 150)
 
 class MediaParser:
     """
     Helper methods when parsing images using cv2.
     """
-    def __init__(self, media_loader: MediaLoader):
+    def __init__(self,
+                 media_loader: MediaLoader,
+                 white_pixel_threshold: int = 0,
+                 light_grey_pixel_threshold: int = 30):
         self._media_loader = media_loader
+        self._white_pixel_threshold = white_pixel_threshold
+        self._light_grey_pixel_threshold = light_grey_pixel_threshold
+        
+        self._white_pixel_percentage = self._calculate_white_pixels_percentage(
+            image=self._media_loader.image,
+            threshold=WHITE_THRESHOLD)
+        self._light_grey_pixel_percentage = self._calculate_white_pixels_percentage(
+            image=self._media_loader.image,
+            threshold=LIGHT_GREY_THRESHOLD)
+        
+        print(self._white_pixel_percentage)
+        print(self._light_grey_pixel_percentage)
 
-        # Load in image path into cv2 and do basic pre-processing
-        self.image = self._basic_preprocessing()
+        # Basic image pre-processing
+        self.image = self._basic_preprocessing(image=self._media_loader.image)
 
-        # Image processing
+        # Image pre-processing
         self.image = self._image_processing()
 
-    def _white_pixels_percent(self, image: MatLike) -> float:
-        """Calculate percentage of white pixels in image."""
+    def _calculate_white_pixels_percentage(self, image: MatLike, threshold: tuple) -> float:
+        """Calculate the percentage of white or near-white pixels using NumPy."""
 
-        # Count the number of white pixels
-        number_of_white_pix = cv2.countNonZero(image)
+        # Convert the image to RGB
+        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Calculate the total number of pixels
-        total_pix = image.shape[0] * image.shape[1]
-
-        # Calculate the percentage of white pixels
-        percentage = (number_of_white_pix / total_pix) * 100
-        return percentage
+        # Create a boolean mask where white or near-white pixels are True
+        mask = np.all(img_rgb >= threshold, axis=-1)
+        white_pixels_percentage = np.sum(mask) / mask.size * 100
+        return white_pixels_percentage
 
     def _do_inversion(self, image: MatLike) -> MatLike:
         """Invert the image only if it is white characters on black background."""
@@ -47,51 +62,63 @@ class MediaParser:
         """Image pre-processing to highlight white characters."""
 
         # Generate threshold to highlight white characters
-        _, thresh = cv2.threshold(self.image, 245, 255, cv2.THRESH_BINARY)
+        _, thresh = cv2.threshold(self.image, 245, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-        # Closing on threshold
-        closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, DEFAULT_KERNEL)
+        # Opening on threshold
+        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, DEFAULT_KERNEL, iterations=2)
 
-        # Invert black and white
-        result = self._do_inversion(image=closing)
-
-        # Erode image
-        eroded = cv2.erode(result, DEFAULT_KERNEL, iterations=1)
+        # Invert black and white and erode image
+        inverted = self._do_inversion(image=opening)
+        eroded = cv2.erode(inverted, DEFAULT_KERNEL, iterations=1)
         return eroded
-    
+ 
     def _image_processing_black_characters(self) -> MatLike:
         """Image pre-processing to highlight black characters."""
 
         # Apply thresholding if your image is not binary
         _, thresh = cv2.threshold(self.image, 135, 255, cv2.THRESH_BINARY_INV)
 
-        # Invert the binary image
-        inverted_image = self._do_inversion(image=thresh)
-
-        # Erode image
-        eroded = cv2.erode(inverted_image, DEFAULT_KERNEL, iterations=1)
+        # Invert the binary image and erode image
+        inverted = self._do_inversion(image=thresh)
+        eroded = cv2.erode(inverted, DEFAULT_KERNEL, iterations=1)
         return eroded
     
-    def _basic_preprocessing(self) -> MatLike:
+    def _clahe_transformation(self, image: MatLike) -> MatLike:
+        """Clahe transformation on l-channel in image to increase contrast."""
+
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(3, 3))
+            
+        # Convert the image to LAB color space and split channels
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
+        l, a, b = cv2.split(lab)
+
+        # Apply CLAHE to the L-channel and merge channels
+        cl = clahe.apply(l)
+        lab_image = cv2.merge((cl, a, b))
+        return lab_image
+
+    def _basic_preprocessing(self, image: MatLike) -> MatLike:
         """Basic image pre-processing."""
 
+        # Do clahe transformation only if there are no white/near-white pixels
+        if (self._white_pixel_percentage == self._white_pixel_threshold and
+            self._light_grey_pixel_percentage < self._light_grey_pixel_percentage):
+            image = self._clahe_transformation(image=image)
+
         # Apply grey scale and gaussian blur to image
-        grey = cv2.cvtColor(self._media_loader.image, cv2.COLOR_BGR2GRAY)
+        grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(grey, (3, 3), 0)
         return blur
 
     def _image_processing(self) -> MatLike:
         """Core image pre-processing."""
 
-        # Generate threshold to highlight white & black characters
-        image_white = self._image_processing_white_characters()
-
-        # Check percentage of pixels that are white
-        if self._white_pixels_percent(image=image_white) > 93.0:
-            image_black = self._image_processing_black_characters()
-            return image_black
+        if self._light_grey_pixel_percentage > self._light_grey_pixel_threshold:
+            image = self._image_processing_black_characters()
+        else:
+            image = self._image_processing_white_characters()
         
-        return image_white
+        return image
      
     def remove_small_contours(self) -> None:
         """If needed, remove small contours from image."""

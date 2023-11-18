@@ -7,6 +7,7 @@ from src.media.parser import MediaParser
 from src.media.loader import MediaLoader
 from src.vision.openai import OpenAIInterface
 from src.utils import (
+    clean_channel,
     encode_image, 
     parse_ocr_response,
     source_data_directory)
@@ -43,8 +44,13 @@ class TelegramOCR:
 
         await self._client.disconnect()
 
-    async def stream_images_in_messages(self, telegram_channel: str, telegram_channel_to_send: str) -> None:
+    async def stream_images_in_messages(
+        self,
+        telegram_channel: str,
+        telegram_channel_to_send: str,
+        telegram_channel_keywords: list) -> None:
         """Stream messages from Telegram channel and process images."""
+
         path_source_data_image = source_data_directory(channel=telegram_channel)
 
         await self._client.connect()
@@ -55,7 +61,9 @@ class TelegramOCR:
         async def handler(event):
             """Telegram media handler."""
 
-            message_media = event.message.media
+            # Message info
+            message = event.message
+            message_media = message.media
             if message_media:
                 media_path = None
 
@@ -63,29 +71,39 @@ class TelegramOCR:
                 if isinstance(message_media, MessageMediaPhoto):
                     media_path = await self._client.download_media(
                         message_media.photo,
-                        f'{path_source_data_image}/{event.message.id}.jpg')
+                        f'{path_source_data_image}/{message.id}.jpg')
                 elif isinstance(message_media, MessageMediaDocument):
                     if 'video/mp4' in message_media.document.mime_type:
                         media_path = await self._client.download_media(
                             message_media,
-                            f'{path_source_data_image}/{event.message.id}.mp4')
+                            f'{path_source_data_image}/{message.id}.mp4')
 
                 # Media parser instantiation
                 if media_path is not None:
                     media_parser = MediaParser(
                         media_loader=MediaLoader(media_path=media_path))
-                    media_parser.remove_small_contours()
+                    if media_parser.image is not None:
+                        media_parser.remove_small_contours()
 
-                    # After image processing, encode image to base64 representation
-                    base64_image = encode_image(image=media_parser.image)
+                        # After image processing, encode image to base64 representation
+                        base64_image = encode_image(image=media_parser.image)
 
-                    response = self.openai_vision.get_vision_completion(
-                        prompt='What are the largest characters in this image? Only output the text in the image.',
-                        base64_image=base64_image)
-                    response_parsed = parse_ocr_response(response=response)
+                        response = self.openai_vision.get_vision_completion(
+                            prompt='What are the largest characters in this image? Only output the text in the image.',
+                            base64_image=base64_image)
+                        
+                        # Check if any keywords are in text of message
+                        do_keywords = any(i for i in telegram_channel_keywords if i in message.text)
+                        response_parsed = parse_ocr_response(response=response)
 
-                    # Send parsed response to telegram channel
-                    if response_parsed is not None:         
-                        await self._client.send_message(telegram_channel_to_send, response_parsed)
+                        # Send parsed response to Telegram channel
+                        if do_keywords:
+                            if response_parsed is not None:
+                                message = f'Text parsed in message on {message.date}: {response_parsed}'
+                                await self._client.send_message(telegram_channel_to_send, message)
+                            else:
+                                message_link = f"https://t.me/{clean_channel(channel=telegram_channel)}/{message.id}"
+                                message = f"ISSUE WITH PARSING TEXT IN MESSAGE on {message.date}.\nPlease see link to message: {message_link}"
+                                await self._client.send_message(telegram_channel_to_send, message)
 
         await self._client.run_until_disconnected()

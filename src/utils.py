@@ -15,11 +15,12 @@ class TelegramInfo:
     phone_number: str
     channel: str
     channel_to_send: str
+    channel_keywords: list
 
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-def _clean_channel(channel: str) -> str:
+def clean_channel(channel: str) -> str:
     return channel.replace('@', '')
 
 def load_api_info() -> TelegramInfo:
@@ -28,6 +29,7 @@ def load_api_info() -> TelegramInfo:
     # Config variables
     TELEGRAM_CHANNEL = config['telegram_channel']
     TELEGRAM_CHANNEL_TO_SEND = config['telegram_channel_to_send']
+    TELEGRAM_CHANNEL_KEYWORDS = config['telegram_keywords']
 
     # Environment variables
     TELEGRAM_APP_ID = os.environ['TELEGRAM_APP_ID']
@@ -39,12 +41,13 @@ def load_api_info() -> TelegramInfo:
         app_hash=TELEGRAM_APP_HASH,
         phone_number=TELEGRAM_PHONE_NUMBER,
         channel=TELEGRAM_CHANNEL,
-        channel_to_send=TELEGRAM_CHANNEL_TO_SEND
+        channel_to_send=TELEGRAM_CHANNEL_TO_SEND,
+        channel_keywords=TELEGRAM_CHANNEL_KEYWORDS
     )
 
 def source_data_directory(channel: str) -> None:
     """Return source data directory."""
-    return f"{config['data_dir']}/{_clean_channel(channel=channel)}"
+    return f"{config['data_dir']}/{clean_channel(channel=channel)}"
 
 def source_data_directories(channel: str) -> None:
     """Create source data directories for parsed data."""
@@ -68,7 +71,7 @@ def parse_ocr_response(response: str) -> Optional[str]:
     """Logic to parse and clean the OCR response."""
     
     # Remove non-letter characters
-    cleaned_response = re.sub('[^A-Za-z]+', '', response).strip()
+    cleaned_response = re.sub('[^A-Za-z]+', '', response).strip().upper()
 
     # Ignore reponse if length is more than 5 letters
     if len(cleaned_response) in range(1, 6):
