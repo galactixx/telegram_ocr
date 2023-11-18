@@ -26,9 +26,6 @@ class MediaParser:
         self._light_grey_pixel_percentage = self._calculate_white_pixels_percentage(
             image=self._media_loader.image,
             threshold=LIGHT_GREY_THRESHOLD)
-        
-        print(self._white_pixel_percentage)
-        print(self._light_grey_pixel_percentage)
 
         # Basic image pre-processing
         self.image = self._basic_preprocessing(image=self._media_loader.image)
