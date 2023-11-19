@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import cv2
 from cv2.typing import MatLike
@@ -31,7 +33,7 @@ class MediaParser:
             image=self._media_loader.image,
             threshold=LIGHT_GREY_THRESHOLD)
 
-        self._kernel = self._kernel_choice(image=self._media_loader.image)
+        self._erosion_iterations, self._kernel = self._kernel_choice(image=self._media_loader.image)
 
         # Basic image pre-processing
         self.image = self._basic_preprocessing(image=self._media_loader.image)
@@ -39,13 +41,13 @@ class MediaParser:
         # Image pre-processing
         self.image = self._image_processing()
 
-    def _kernel_choice(self, image: MatLike) -> NDArray:
-        """Decide size of kernel depending on size of image (pixels)."""
+    def _kernel_choice(self, image: MatLike) -> Tuple[int, NDArray]:
+        """Decide size of kernel and erosion iterations depending on size of image (pixels)."""
         image_pixels = image.shape[0] * image.shape[1]
         if image_pixels * self._white_pixel_percentage < self._pixel_threshold:
-            return np.ones((2, 2), np.uint8)
+            return 3, np.ones((2, 2), np.uint8)
         else:
-            return np.ones((3, 3), np.uint8)
+            return 4, np.ones((3, 3), np.uint8)
 
     def _calculate_pixels_percentage(self, image: MatLike, threshold: tuple) -> float:
         """Calculate the percentage of white or near-white pixels using NumPy."""
@@ -76,8 +78,8 @@ class MediaParser:
         _, thresh = cv2.threshold(self.image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
         # Opening on threshold
-        eroded = cv2.erode(thresh, self._kernel, iterations=3)
-        dilated = cv2.dilate(eroded, self._kernel, iterations=5)
+        eroded = cv2.erode(thresh, self._kernel, iterations=self._erosion_iterations)
+        dilated = cv2.dilate(eroded, self._kernel, iterations=9)
 
         # Invert black and white and erode image
         inverted = self._do_inversion(image=dilated)
