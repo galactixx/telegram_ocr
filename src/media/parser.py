@@ -59,15 +59,15 @@ class MediaParser:
         """Image pre-processing to highlight white characters."""
 
         # Generate threshold to highlight white characters
-        _, thresh = cv2.threshold(self.image, 245, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, thresh = cv2.threshold(self.image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
         # Opening on threshold
-        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, DEFAULT_KERNEL, iterations=2)
+        eroded = cv2.erode(thresh, DEFAULT_KERNEL, iterations=3)
+        dilated = cv2.dilate(eroded, DEFAULT_KERNEL, iterations=4)
 
         # Invert black and white and erode image
-        inverted = self._do_inversion(image=opening)
-        eroded = cv2.erode(inverted, DEFAULT_KERNEL, iterations=1)
-        return eroded
+        inverted = self._do_inversion(image=dilated)
+        return inverted
  
     def _image_processing_black_characters(self) -> MatLike:
         """Image pre-processing to highlight black characters."""
@@ -99,8 +99,9 @@ class MediaParser:
 
         # Do clahe transformation only if there are no white/near-white pixels
         if (self._white_pixel_percentage == self._white_pixel_threshold and
-            self._light_grey_pixel_percentage < self._light_grey_pixel_percentage):
+            self._light_grey_pixel_percentage < self._light_grey_pixel_threshold):
             image = self._clahe_transformation(image=image)
+            print('Here')
 
         # Apply grey scale and gaussian blur to image
         grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -116,7 +117,7 @@ class MediaParser:
             image = self._image_processing_white_characters()
         
         return image
-     
+
     def remove_small_contours(self) -> None:
         """If needed, remove small contours from image."""
 
