@@ -35,5 +35,4 @@ class GoogleVision(BaseVision):
 
         if response.error.message:
             return None
-        
         return result

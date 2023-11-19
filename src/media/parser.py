@@ -19,12 +19,16 @@ class MediaParser:
                  pixel_threshold: int = 15000,
                  inversion_threshold: int = 145,
                  white_pixel_threshold: float = 0.0,
-                 light_grey_pixel_threshold: float = 0.30):
+                 light_grey_pixel_threshold: float = 0.30,
+                 contour_area_threshold: float = 0.008):
         self._media_loader = media_loader
         self._pixel_threshold = pixel_threshold
         self._inversion_threshold = inversion_threshold
         self._white_pixel_threshold = white_pixel_threshold
         self._light_grey_pixel_threshold = light_grey_pixel_threshold
+        self._contour_area_threshold = contour_area_threshold
+
+        self._image_area = self._media_loader.image.shape[0] * self._media_loader.image.shape[1]
 
         self._white_pixel_percentage = self._calculate_pixels_percentage(
             image=self._media_loader.image,
@@ -33,7 +37,7 @@ class MediaParser:
             image=self._media_loader.image,
             threshold=LIGHT_GREY_THRESHOLD)
 
-        self._erosion_iterations, self._kernel = self._kernel_choice(image=self._media_loader.image)
+        self._erosion_iterations, self._kernel = self._kernel_choice()
 
         # Basic image pre-processing
         self.image = self._basic_preprocessing(image=self._media_loader.image)
@@ -41,10 +45,9 @@ class MediaParser:
         # Image pre-processing
         self.image = self._image_processing()
 
-    def _kernel_choice(self, image: MatLike) -> Tuple[int, NDArray]:
+    def _kernel_choice(self) -> Tuple[int, NDArray]:
         """Decide size of kernel and erosion iterations depending on size of image (pixels)."""
-        image_pixels = image.shape[0] * image.shape[1]
-        if image_pixels * self._white_pixel_percentage < self._pixel_threshold:
+        if self._image_area * self._white_pixel_percentage < self._pixel_threshold:
             return 3, np.ones((2, 2), np.uint8)
         else:
             return 4, np.ones((3, 3), np.uint8)
@@ -140,8 +143,9 @@ class MediaParser:
         contours, _ = cv2.findContours(self.image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         # Iterate through contours
-        for contour in contours:
-            area = cv2.contourArea(contour)
+        if len(contours) >= 100:
+            for contour in contours:
+                area = cv2.contourArea(contour)
 
-            if area < 1000:
-                cv2.drawContours(self.image, [contour], 0, (255), -1)
+                if (area / self._image_area) < self._contour_area_threshold:
+                    cv2.drawContours(self.image, [contour], 0, (255), -1)

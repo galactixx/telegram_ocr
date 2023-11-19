@@ -23,7 +23,7 @@ def example_ocr() -> str:
         media_parser = MediaParser(
             media_loader=MediaLoader(media_path=media_path))
         media_parser.remove_small_contours()
-
+        
         bytes_image = encode_image(image=media_parser.image)
         response = google.get_vision_completion(bytes_image=bytes_image)
         print(f'Text detected in {media}: {response}')
