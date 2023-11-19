@@ -1,31 +1,37 @@
 import numpy as np
 import cv2
 from cv2.typing import MatLike
+from numpy.typing import NDArray
 
 from src.media.loader import MediaLoader
 
-DEFAULT_KERNEL = np.ones((2, 2), np.uint8)
 WHITE_THRESHOLD = (240, 240, 240)
 LIGHT_GREY_THRESHOLD = (150, 150, 150)
 
 class MediaParser:
     """
-    Helper methods when parsing images using cv2.
+    Image pre-processing methods for OCR analysis.
     """
     def __init__(self,
                  media_loader: MediaLoader,
-                 white_pixel_threshold: int = 0,
-                 light_grey_pixel_threshold: int = 30):
+                 pixel_threshold: int = 15000,
+                 inversion_threshold: int = 145,
+                 white_pixel_threshold: float = 0.0,
+                 light_grey_pixel_threshold: float = 0.30):
         self._media_loader = media_loader
+        self._pixel_threshold = pixel_threshold
+        self._inversion_threshold = inversion_threshold
         self._white_pixel_threshold = white_pixel_threshold
         self._light_grey_pixel_threshold = light_grey_pixel_threshold
-        
-        self._white_pixel_percentage = self._calculate_white_pixels_percentage(
+
+        self._white_pixel_percentage = self._calculate_pixels_percentage(
             image=self._media_loader.image,
             threshold=WHITE_THRESHOLD)
-        self._light_grey_pixel_percentage = self._calculate_white_pixels_percentage(
+        self._light_grey_pixel_percentage = self._calculate_pixels_percentage(
             image=self._media_loader.image,
             threshold=LIGHT_GREY_THRESHOLD)
+
+        self._kernel = self._kernel_choice(image=self._media_loader.image)
 
         # Basic image pre-processing
         self.image = self._basic_preprocessing(image=self._media_loader.image)
@@ -33,7 +39,15 @@ class MediaParser:
         # Image pre-processing
         self.image = self._image_processing()
 
-    def _calculate_white_pixels_percentage(self, image: MatLike, threshold: tuple) -> float:
+    def _kernel_choice(self, image: MatLike) -> NDArray:
+        """Decide size of kernel depending on size of image (pixels)."""
+        image_pixels = image.shape[0] * image.shape[1]
+        if image_pixels * self._white_pixel_percentage < self._pixel_threshold:
+            return np.ones((2, 2), np.uint8)
+        else:
+            return np.ones((3, 3), np.uint8)
+
+    def _calculate_pixels_percentage(self, image: MatLike, threshold: tuple) -> float:
         """Calculate the percentage of white or near-white pixels using NumPy."""
 
         # Convert the image to RGB
@@ -41,7 +55,7 @@ class MediaParser:
 
         # Create a boolean mask where white or near-white pixels are True
         mask = np.all(img_rgb >= threshold, axis=-1)
-        white_pixels_percentage = np.sum(mask) / mask.size * 100
+        white_pixels_percentage = np.sum(mask) / mask.size
         return white_pixels_percentage
 
     def _do_inversion(self, image: MatLike) -> MatLike:
@@ -51,7 +65,7 @@ class MediaParser:
         average_intensity = np.mean(image)
 
         # Determine the thresholding type based on the average intensity
-        if average_intensity < 145:
+        if average_intensity < self._inversion_threshold:
             return cv2.bitwise_not(image)
         return image
 
@@ -62,8 +76,8 @@ class MediaParser:
         _, thresh = cv2.threshold(self.image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
         # Opening on threshold
-        eroded = cv2.erode(thresh, DEFAULT_KERNEL, iterations=3)
-        dilated = cv2.dilate(eroded, DEFAULT_KERNEL, iterations=4)
+        eroded = cv2.erode(thresh, self._kernel, iterations=3)
+        dilated = cv2.dilate(eroded, self._kernel, iterations=5)
 
         # Invert black and white and erode image
         inverted = self._do_inversion(image=dilated)
@@ -77,7 +91,7 @@ class MediaParser:
 
         # Invert the binary image and erode image
         inverted = self._do_inversion(image=thresh)
-        eroded = cv2.erode(inverted, DEFAULT_KERNEL, iterations=1)
+        eroded = cv2.erode(inverted, self._kernel, iterations=1)
         return eroded
     
     def _clahe_transformation(self, image: MatLike) -> MatLike:
@@ -101,7 +115,6 @@ class MediaParser:
         if (self._white_pixel_percentage == self._white_pixel_threshold and
             self._light_grey_pixel_percentage < self._light_grey_pixel_threshold):
             image = self._clahe_transformation(image=image)
-            print('Here')
 
         # Apply grey scale and gaussian blur to image
         grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
