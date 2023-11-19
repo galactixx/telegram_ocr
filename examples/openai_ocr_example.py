@@ -4,6 +4,7 @@ from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
 from src.vision.openai import OpenAIVision
 from src.utils import encode_image_base64
+from examples.evals import ocr_evaluation
 
 def example_ocr() -> str:
     """Example of how OpenAI OCR functions can be used."""
@@ -30,7 +31,9 @@ def example_ocr() -> str:
         response = openai.get_vision_completion(
             prompt='What are the largest characters in this image? Only output the text in the image.',
             base64_image=base64_image)
-        print(f'Text detected in {media}: {response}')
+        
+        # OCR evaluation
+        ocr_evaluation(image_name=media, prediction=response)
 
 if __name__ == "__main__":
     example_ocr()

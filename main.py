@@ -1,6 +1,6 @@
 import asyncio
 
-from src.vision.openai import OpenAIInterface
+from src.vision.openai import OpenAIVision
 from src.telegram.telegram import TelegramOCR
 from src.utils import (
     load_api_info,
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         telegram_app_id=telegram_info.app_id,
         telegram_app_hash=telegram_info.app_hash,
         telegram_phone_number=telegram_info.phone_number,
-        openai_vision=OpenAIInterface()
+        openai_vision=OpenAIVision()
     )
 
     # Download any images sent by account in question

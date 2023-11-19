@@ -4,6 +4,7 @@ from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
 from src.vision.google import GoogleVision
 from src.utils import encode_image
+from examples.evals import ocr_evaluation
 
 def example_ocr() -> str:
     """Example of how Google OCR functions can be used."""
@@ -26,7 +27,9 @@ def example_ocr() -> str:
         
         bytes_image = encode_image(image=media_parser.image)
         response = google.get_vision_completion(bytes_image=bytes_image)
-        print(f'Text detected in {media}: {response}')
+
+        # OCR evaluation
+        ocr_evaluation(image_name=media, prediction=response)
 
 if __name__ == "__main__":
     example_ocr()

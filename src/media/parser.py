@@ -20,13 +20,15 @@ class MediaParser:
                  inversion_threshold: int = 145,
                  white_pixel_threshold: float = 0.0,
                  light_grey_pixel_threshold: float = 0.30,
-                 contour_area_threshold: float = 0.008):
+                 contour_area_threshold: float = 0.008,
+                 contour_area_number_threshold: int = 100):
         self._media_loader = media_loader
         self._pixel_threshold = pixel_threshold
         self._inversion_threshold = inversion_threshold
         self._white_pixel_threshold = white_pixel_threshold
         self._light_grey_pixel_threshold = light_grey_pixel_threshold
         self._contour_area_threshold = contour_area_threshold
+        self._contour_area_number_threshold = contour_area_number_threshold
 
         self._image_area = self._media_loader.image.shape[0] * self._media_loader.image.shape[1]
 
@@ -143,7 +145,7 @@ class MediaParser:
         contours, _ = cv2.findContours(self.image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         # Iterate through contours
-        if len(contours) >= 100:
+        if len(contours) >= self._contour_area_number_threshold:
             for contour in contours:
                 area = cv2.contourArea(contour)
 

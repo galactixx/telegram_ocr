@@ -17,6 +17,9 @@ class GoogleVision(BaseVision):
         if not self._api_key:
             raise ValueError("GOOGLE_API_KEY is not set or is blank")
         
+        # Image context with language hints
+        self._IMAGE_CONTEXT = vision.ImageContext(language_hints=['en'])
+
         self._client = vision.ImageAnnotatorClient(
             client_options={'api_key': os.environ['GOOGLE_API_KEY']})
 
@@ -25,7 +28,7 @@ class GoogleVision(BaseVision):
 
         # Retrieve all detected text in image
         image = vision.Image(content=bytes_image)
-        response = self._client.text_detection(image=image)
+        response = self._client.text_detection(image=image, image_context=self._IMAGE_CONTEXT)
         detections = response.text_annotations
 
         # Sort and retrieve longest detected text
