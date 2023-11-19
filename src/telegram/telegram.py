@@ -5,7 +5,7 @@ from telethon.tl.types import (
 
 from src.media.parser import MediaParser
 from src.media.loader import MediaLoader
-from src.vision.openai import OpenAIInterface
+from src.vision.openai import OpenAIVision
 from src.utils import (
     clean_channel,
     encode_image, 
@@ -21,7 +21,7 @@ class TelegramOCR:
         telegram_app_id: int,
         telegram_app_hash: str,
         telegram_phone_number: str,
-        openai_vision: OpenAIInterface):
+        openai_vision: OpenAIVision):
         self._telegram_app_id = telegram_app_id
         self._telegram_app_hash = telegram_app_hash
         self._telegram_phone_number = telegram_phone_number

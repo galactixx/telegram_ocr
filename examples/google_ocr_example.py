@@ -2,14 +2,14 @@ import os
 
 from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
-from src.vision.openai import OpenAIInterface
+from src.vision.google import GoogleVision
 from src.utils import encode_image
 
 def example_ocr() -> str:
-    """Example of how OCR functions can be used."""
+    """Example of how Google OCR functions can be used."""
 
-    # Instantiate OpenAI vision
-    openai = OpenAIInterface()
+    # Instantiate Google vision
+    google = GoogleVision()
 
     # Retrieve all sample media
     media_directory = "./examples/images"
@@ -24,12 +24,8 @@ def example_ocr() -> str:
             media_loader=MediaLoader(media_path=media_path))
         media_parser.remove_small_contours()
 
-        # After image processing, encode image to base64 representation
-        base64_image = encode_image(image=media_parser.image)
-
-        response = openai.get_vision_completion(
-            prompt='What are the largest characters in this image? Only output the text in the image.',
-            base64_image=base64_image)
+        bytes_image = encode_image(image=media_parser.image)
+        response = google.get_vision_completion(bytes_image=bytes_image)
         print(f'Text detected in {media}: {response}')
 
 if __name__ == "__main__":

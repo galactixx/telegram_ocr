@@ -1,37 +1,38 @@
 import os
+from typing import Optional
 
 from openai import OpenAI
 
-from src.vision.base import BaseInterface
+from src.vision.base import BaseVision
 from src.vision.models import OpenAIModels
+from src.utils import parse_ocr_response
 
-class OpenAIInterface(BaseInterface):
-    """Simple interface for OpenAI LLM."""
+class OpenAIVision(BaseVision):
+    """OpenAI vision API connection."""
     def __init__(self,
                  model_name: OpenAIModels = OpenAIModels.GPT_4_VISION,
                  temperature: float = 1.0):
-        self.model_name = model_name
-        self.temperature = temperature
+        self._model_name = model_name
+        self._temperature = temperature
 
         # Retrieve API key
-        self._open_ai_key = os.environ['OPENAI_API_KEY']
+        self._api_key = os.environ['OPENAI_API_KEY']
 
         # The API key is blank or not set
-        if not self._open_ai_key:
+        if not self._api_key:
             raise ValueError("OPENAI_API_KEY is not set or is blank")
 
         # Instantiate a client object for interacting with the OpenAI API
-        self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+        self._client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
-        if not isinstance(self.model_name, OpenAIModels):
+        if not isinstance(self._model_name, OpenAIModels):
             raise ValueError(f'{model_name.value} is not a valid model name for OpenAI API')
-        
-    def get_vision_completion(self, prompt: str, base64_image: str) -> str:
-        """Get prompt vision completion for image from OpenAI API."""
 
-        # Chat completion
-        response = self.client.chat.completions.create(
-            model=self.model_name.value,
+    def get_vision_completion(self, prompt: str, base64_image: str) -> Optional[str]:
+        """Get prompt vision completion for image from OpenAI vision API."""
+
+        response = self._client.chat.completions.create(
+            model=self._model_name.value,
             messages=[
             {
                 "role": "user",
@@ -49,5 +50,5 @@ class OpenAIInterface(BaseInterface):
                 ]
             }
         ])
-        
-        return response.choices[0].message.content
+        detected_text = parse_ocr_response(response=response.choices[0].message.content)
+        return detected_text

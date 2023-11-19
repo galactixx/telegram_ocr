@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
-class BaseInterface(ABC):
-    """Base interface for LLM."""
+class BaseVision(ABC):
+    """Base interface for vision api."""
 
     @abstractmethod
     def get_vision_completion(self, prompt: str) -> str:
-        """Get prompt completion from LLM."""
+        """Get prompt completion from vision API."""
         pass
