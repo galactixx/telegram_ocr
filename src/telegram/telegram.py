@@ -5,7 +5,7 @@ from telethon.tl.types import (
 
 from src.media.parser import MediaParser
 from src.media.loader import MediaLoader
-from src.vision.openai import OpenAIVision
+from src.vision.vision_openai import OpenAIVision
 from src.utils import (
     clean_channel,
     encode_image, 

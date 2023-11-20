@@ -2,7 +2,7 @@ import os
 
 from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
-from src.vision.easyocr import EasyOCR
+from src.vision.vision_easyocr import EasyOCR
 from src.utils import encode_image
 from examples.evals import ocr_evaluation
 

@@ -1,6 +1,6 @@
 import asyncio
 
-from src.vision.openai import OpenAIVision
+from src.vision.vision_openai import OpenAIVision
 from src.telegram.telegram import TelegramOCR
 from src.utils import load_api_info
 

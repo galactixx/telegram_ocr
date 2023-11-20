@@ -2,7 +2,7 @@ import os
 
 from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
-from src.vision.google import GoogleVision
+from src.vision.vision_google import GoogleVision
 from src.utils import encode_image
 from examples.evals import ocr_evaluation
 

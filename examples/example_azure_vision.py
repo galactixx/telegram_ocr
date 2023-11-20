@@ -2,15 +2,15 @@ import os
 
 from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
-from src.vision.vision_openai import OpenAIVision
-from src.utils import encode_image_base64
+from src.vision.vision_azure import AzureVision
+from src.utils import encode_image
 from examples.evals import ocr_evaluation
 
 def example_ocr() -> str:
-    """Example of how OpenAI OCR functions can be used."""
+    """Example of how Azure OCR functions can be used."""
 
-    # Instantiate OpenAI vision
-    openai = OpenAIVision()
+    # Instantiate Azure vision
+    azure = AzureVision()
 
     # Retrieve all sample media
     media_directory = "./examples/images"
@@ -24,14 +24,10 @@ def example_ocr() -> str:
         media_parser = MediaParser(
             media_loader=MediaLoader(media_path=media_path))
         media_parser.remove_small_contours()
-
-        # After image processing, encode image to base64 representation
-        base64_image = encode_image_base64(image=media_parser.image)
-
-        response = openai.get_vision_completion(
-            prompt='What are the largest characters in this image? Only output the text in the image.',
-            base64_image=base64_image)
         
+        bytes_image = encode_image(image=media_parser.image)
+        response = azure.get_vision_completion(bytes_image=bytes_image)
+
         # OCR evaluation
         ocr_evaluation(image_name=media, prediction=response)
 
