@@ -55,13 +55,13 @@ def source_data_directories(channel: str) -> None:
     path = source_data_directory(channel=channel)
     os.makedirs(path, exist_ok=True)
 
-def encode_image(image: MatLike) -> str:
+def encode_image(image: MatLike) -> bytes:
     """Given MatLike object from cv2, return bytes representation of image."""
     _, img_encoded = cv2.imencode('.jpg', image)
     img_bytes = img_encoded.tobytes()
     return img_bytes
 
-def encode_image_base64(image: MatLike) -> str:
+def encode_image_base64(image: MatLike) -> bytes:
     """Given MatLike object from cv2, return base64 representation of image."""
     img_bytes = encode_image(image=image)
     img_base64 = base64.b64encode(img_bytes).decode('utf-8')
