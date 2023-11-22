@@ -8,9 +8,10 @@ from azure.cognitiveservices.vision.computervision.models import OperationStatus
 from msrest.authentication import CognitiveServicesCredentials
 
 from src.utils import parse_ocr_response
-from src.vision.base import BaseVision 
+from src.vision._base import BaseVision 
 
 class AzureVision(BaseVision):
+    """Microsoft Azure AI vision API connection."""
     def __init__(self):
         self._key = os.environ['AZURE_API_KEY']
         self._endpoint = os.environ['AZURE_ENDPOINT']

@@ -3,9 +3,10 @@ from typing import Optional
 import easyocr
 
 from src.utils import parse_ocr_response
-from src.vision.base import BaseVision
+from src.vision._base import BaseVision
 
 class EasyOCR(BaseVision):
+    """Easy OCR API connection."""
     def __init__(self):
         self._reader = easyocr.Reader(['en'])
 

@@ -4,7 +4,7 @@ from typing import Optional
 from google.cloud import vision
 
 from src.utils import parse_ocr_response
-from src.vision.base import BaseVision
+from src.vision._base import BaseVision
 
 class GoogleVision(BaseVision):
     """Google AI vision API connection."""

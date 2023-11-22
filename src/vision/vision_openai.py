@@ -3,8 +3,8 @@ from typing import Optional
 
 from openai import OpenAI
 
-from src.vision.base import BaseVision
-from src.vision.models import OpenAIModels
+from src.vision._base import BaseVision
+from src.vision._models import OpenAIModels
 from src.utils import parse_ocr_response
 
 class OpenAIVision(BaseVision):
