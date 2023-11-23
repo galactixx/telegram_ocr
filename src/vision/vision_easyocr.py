@@ -10,7 +10,7 @@ class EasyOCR(BaseVision):
     def __init__(self):
         self._reader = easyocr.Reader(['en'])
 
-    def get_vision_completion(self, bytes_image: bytes) -> Optional[str]:
+    def get_completion(self, bytes_image: bytes) -> Optional[str]:
         """Get text detection within image from easy OCR API."""
 
         # Use the reader to read text from the bytes

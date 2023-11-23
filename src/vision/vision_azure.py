@@ -27,7 +27,7 @@ class AzureVision(BaseVision):
         self._client = ComputerVisionClient(
             self._endpoint, CognitiveServicesCredentials(self._key))
 
-    def get_vision_completion(self, bytes_image: bytes) -> Optional[str]:
+    def get_completion(self, bytes_image: bytes) -> Optional[str]:
         """Get text detection within image from Azure vision API."""
 
         read_response = self._client.read_in_stream(io.BytesIO(bytes_image), raw=True)

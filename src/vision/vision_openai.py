@@ -28,7 +28,7 @@ class OpenAIVision(BaseVision):
         if not isinstance(self._model_name, OpenAIModels):
             raise ValueError(f'{model_name.value} is not a valid model name for OpenAI API')
 
-    def get_vision_completion(self, prompt: str, base64_image: str) -> Optional[str]:
+    def get_completion(self, prompt: str, base64_image: str) -> Optional[str]:
         """Get prompt vision completion for image from OpenAI vision API."""
 
         response = self._client.chat.completions.create(

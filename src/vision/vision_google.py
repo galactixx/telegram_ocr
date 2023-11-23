@@ -20,7 +20,7 @@ class GoogleVision(BaseVision):
         self._client = vision.ImageAnnotatorClient(
             client_options={'api_key': os.environ['GOOGLE_API_KEY']})
 
-    def get_vision_completion(self, bytes_image: bytes) -> Optional[str]:
+    def get_completion(self, bytes_image: bytes) -> Optional[str]:
         """Get text detection within image from Google AI vision API."""
 
         # Retrieve all detected text in image

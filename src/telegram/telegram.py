@@ -88,7 +88,7 @@ class TelegramOCR:
                         # After image processing, encode image to base64 representation
                         base64_image = encode_image(image=media_parser.image)
 
-                        response = self.openai_vision.get_vision_completion(
+                        response = self.openai_vision.get_completion(
                             prompt='What are the largest characters in this image? Only output the text in the image.',
                             base64_image=base64_image)
                         

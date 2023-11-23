@@ -4,7 +4,7 @@ from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
 from src.vision.vision_easyocr import EasyOCR
 from src.utils import encode_image
-from examples.evals import ocr_evaluation
+from examples._evals import ocr_evaluation
 
 def example_ocr() -> str:
     """Example of how easy OCR functions can be used."""
@@ -26,7 +26,7 @@ def example_ocr() -> str:
         media_parser.remove_small_contours()
         
         bytes_image = encode_image(image=media_parser.image)
-        response = easy_ocr.get_vision_completion(bytes_image=bytes_image)
+        response = easy_ocr.get_completion(bytes_image=bytes_image)
 
         # OCR evaluation
         ocr_evaluation(image_name=media, prediction=response)
