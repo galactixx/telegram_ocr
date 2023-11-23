@@ -14,7 +14,7 @@ from src.vision._models import (
 class TrOCR(BaseVision):
     """TrOCR local model inference."""
     def __init__(self,
-                 model_name: LocalModels = LocalModels.TROCR_LARGE_STAGE_1,
+                 model_name: LocalModels = LocalModels.TROCR_LARGE_STR,
                  model_directory: ModelsDirectory = ModelsDirectory.TROCR):
         self._model_name = model_name
         self._model_directory = model_directory
