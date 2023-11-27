@@ -3,6 +3,7 @@ import os
 from PIL import Image
 import cv2
 from cv2.typing import MatLike
+from torch import Tensor
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
 from src.utils import parse_ocr_response
@@ -31,16 +32,22 @@ class TrOCR(BaseVision):
             self._processor.save_pretrained(local_model_path)
             self._model.save_pretrained(local_model_path)
 
-    def get_completion(self, image: MatLike) -> str:
-        """Get text detection within image from trocr local model."""
+    def _process_image(self, image: MatLike) -> Tensor:
+        """Transform open-cv image object into tensor."""
 
         # Convert matlive open-cv object into RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
         image_pil = Image.fromarray(image_rgb)
 
         # Turn rgb image into pixel values
         pixel_values = self._processor(images=image_pil, return_tensors="pt").pixel_values
+        
+        return pixel_values
+
+    def get_completion(self, image: MatLike) -> str:
+        """Get text detection within image from trocr local model."""
+
+        pixel_values = self._process_image(image=image)
 
         # Run inference on image
         output = self._model.generate(pixel_values)

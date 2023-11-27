@@ -1,11 +1,14 @@
 import os
 from typing import Optional
 
+from cv2.typing import MatLike
 from openai import OpenAI
 
 from src.vision._base import BaseVision
 from src.vision._models import OpenAIModels
-from src.utils import parse_ocr_response
+from src.utils import (
+    encode_image_base64,
+    parse_ocr_response)
 
 class OpenAIVision(BaseVision):
     """OpenAI vision API connection."""
@@ -27,9 +30,18 @@ class OpenAIVision(BaseVision):
 
         if not isinstance(self._model_name, OpenAIModels):
             raise ValueError(f'{model_name.value} is not a valid model name for OpenAI API')
+        
+    def _process_image(self, image: MatLike) -> bytes:
+        """Transform open-cv image object into bytes."""
 
-    def get_completion(self, prompt: str, base64_image: str) -> Optional[str]:
+        bytes_base64_image = encode_image_base64(image=image)
+
+        return bytes_base64_image
+
+    def get_completion(self, prompt: str, image: MatLike) -> Optional[str]:
         """Get prompt vision completion for image from OpenAI vision API."""
+
+        bytes_base64_image = self._process_image(image=image)
 
         response = self._client.chat.completions.create(
             model=self._model_name.value,
@@ -44,7 +56,7 @@ class OpenAIVision(BaseVision):
                     {
                     "type": "image_url",
                     "image_url": {
-                        "url": f"data:image/jpeg;base64,{base64_image}"
+                        "url": f"data:image/jpeg;base64,{bytes_base64_image}"
                     }
                     }
                 ]

@@ -1,10 +1,13 @@
 import os
 from typing import Optional
 
+from cv2.typing import MatLike
 from google.cloud import vision
 
-from src.utils import parse_ocr_response
 from src.vision._base import BaseVision
+from src.utils import (
+    encode_image, 
+    parse_ocr_response)
 
 class GoogleVision(BaseVision):
     """Google AI vision API connection."""
@@ -19,9 +22,18 @@ class GoogleVision(BaseVision):
 
         self._client = vision.ImageAnnotatorClient(
             client_options={'api_key': os.environ['GOOGLE_API_KEY']})
+        
+    def _process_image(self, image: MatLike) -> bytes:
+        """Transform open-cv image object into bytes."""
 
-    def get_completion(self, bytes_image: bytes) -> Optional[str]:
+        bytes_image = encode_image(image=image)
+
+        return bytes_image
+
+    def get_completion(self, image: MatLike) -> Optional[str]:
         """Get text detection within image from Google AI vision API."""
+
+        bytes_image = self._process_image(image=image)
 
         # Retrieve all detected text in image
         image = vision.Image(content=bytes_image)

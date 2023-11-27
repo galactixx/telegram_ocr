@@ -3,7 +3,6 @@ import os
 from src.media.loader import MediaLoader
 from src.media.parser import MediaParser
 from src.vision.vision_openai import OpenAIVision
-from src.utils import encode_image_base64
 from examples._evals import ocr_evaluation
 
 def example_ocr() -> str:
@@ -25,12 +24,9 @@ def example_ocr() -> str:
             media_loader=MediaLoader(media_path=media_path))
         media_parser.remove_small_contours()
 
-        # After image processing, encode image to base64 representation
-        base64_image = encode_image_base64(image=media_parser.image)
-
         response = openai.get_completion(
             prompt='What are the largest characters in this image? Only output the text in the image.',
-            base64_image=base64_image)
+            image=media_parser.image)
         
         # OCR evaluation
         ocr_evaluation(image_name=media, prediction=response)

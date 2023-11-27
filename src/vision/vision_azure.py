@@ -5,10 +5,13 @@ import io
 
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
+from cv2.typing import MatLike
 from msrest.authentication import CognitiveServicesCredentials
 
-from src.utils import parse_ocr_response
-from src.vision._base import BaseVision 
+from src.vision._base import BaseVision
+from src.utils import (
+    encode_image, 
+    parse_ocr_response)
 
 class AzureVision(BaseVision):
     """Microsoft Azure AI vision API connection."""
@@ -26,9 +29,18 @@ class AzureVision(BaseVision):
 
         self._client = ComputerVisionClient(
             self._endpoint, CognitiveServicesCredentials(self._key))
+        
+    def _process_image(self, image: MatLike) -> bytes:
+        """Transform open-cv image object into bytes."""
 
-    def get_completion(self, bytes_image: bytes) -> Optional[str]:
+        bytes_image = encode_image(image=image)
+
+        return bytes_image
+
+    def get_completion(self, image: MatLike) -> Optional[str]:
         """Get text detection within image from Azure vision API."""
+
+        bytes_image = self._process_image(image=image)
 
         read_response = self._client.read_in_stream(io.BytesIO(bytes_image), raw=True)
 
