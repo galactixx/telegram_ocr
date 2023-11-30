@@ -184,7 +184,7 @@ class MediaParser:
             contour_mid_point_diff = contour_mid_point_difference(y=y, h=h)
 
             if (abs(contour_mid_point_diff) / self._image_width > self._contour_alignment_threshold and
-                (contour_mid_point_diff - contour_diffs_mean) / contour_diffs_std > self._contour_alignment_deviation):
+                abs(contour_mid_point_diff - contour_diffs_mean) / contour_diffs_std > self._contour_alignment_deviation):
 
                 character = self.image[y:y+h, x:x+w].copy()
                 cv2.drawContours(self.image, [contour], 0, (255), -1)
@@ -192,6 +192,3 @@ class MediaParser:
                 # Calculate new position and re-place
                 new_y = self._center_y - h // 2
                 self.image[new_y:new_y+h, x:x+w] = character
-
-        cv2.imshow('image', self.image)
-        cv2.waitKey(0)
