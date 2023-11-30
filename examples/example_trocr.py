@@ -23,6 +23,7 @@ def example_ocr() -> str:
         media_parser = MediaParser(
             media_loader=MediaLoader(media_path=media_path))
         media_parser.remove_small_contours()
+        media_parser.realign_and_center_contours()
         
         response = trocr_ocr.get_completion(image=media_parser.image)
 

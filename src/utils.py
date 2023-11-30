@@ -4,6 +4,7 @@ import base64
 import re
 from typing import Optional
 
+import numpy as np
 from dataclasses import dataclass
 import cv2
 from cv2.typing import MatLike
@@ -47,6 +48,7 @@ def load_api_info() -> TelegramInfo:
 
 def source_data_directory(channel: str) -> None:
     """Return source data directory."""
+
     return f"{config['data_dir']}/{clean_channel(channel=channel)}"
 
 def source_data_directories(channel: str) -> None:
@@ -57,12 +59,14 @@ def source_data_directories(channel: str) -> None:
 
 def encode_image(image: MatLike) -> bytes:
     """Given MatLike object from cv2, return bytes representation of image."""
+
     _, img_encoded = cv2.imencode('.jpg', image)
     img_bytes = img_encoded.tobytes()
     return img_bytes
 
 def encode_image_base64(image: MatLike) -> bytes:
     """Given MatLike object from cv2, return base64 representation of image."""
+
     img_bytes = encode_image(image=image)
     img_base64 = base64.b64encode(img_bytes).decode('utf-8')
     return img_base64

@@ -21,7 +21,9 @@ class MediaParser:
                  white_pixel_threshold: float = 0.0,
                  light_grey_pixel_threshold: float = 0.30,
                  contour_area_threshold: float = 0.008,
-                 contour_area_number_threshold: int = 100):
+                 contour_area_number_threshold: int = 100,
+                 contour_alignment_threshold: float = 0.15,
+                 contour_alignment_deviation: float = 1.50):
         self._media_loader = media_loader
         self._pixel_threshold = pixel_threshold
         self._inversion_threshold = inversion_threshold
@@ -29,8 +31,13 @@ class MediaParser:
         self._light_grey_pixel_threshold = light_grey_pixel_threshold
         self._contour_area_threshold = contour_area_threshold
         self._contour_area_number_threshold = contour_area_number_threshold
+        self._contour_alignment_threshold = contour_alignment_threshold
+        self._contour_alignment_deviation = contour_alignment_deviation
 
-        self._image_area = self._media_loader.image.shape[0] * self._media_loader.image.shape[1]
+        self._image_width = self._media_loader.image.shape[0]
+        self._image_height = self._media_loader.image.shape[1]
+        self._image_area = self._image_width * self._image_height
+        self._center_y = self._image_width // 2
 
         self._white_pixel_percentage = self._calculate_pixels_percentage(
             image=self._media_loader.image,
@@ -151,3 +158,40 @@ class MediaParser:
 
                 if (area / self._image_area) < self._contour_area_threshold:
                     cv2.drawContours(self.image, [contour], 0, (255), -1)
+
+    def realign_and_center_contours(self) -> None:
+        """Re-align and center specific contours that are noticeably not centered."""
+
+        def contour_mid_point_difference(y: float, h: float) -> float:
+            return (y + y + h) // 2 - self._center_y
+
+        # Find contours and hierarchy
+        contour_diffs = []
+        contours, _ = cv2.findContours(self.image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for contour in contours:
+            _, y, _, h = cv2.boundingRect(contour)
+            contour_diffs.append(
+                contour_mid_point_difference(y=y, h=h)
+            )
+
+        contour_diffs_std = np.std(contour_diffs)
+        contour_diffs_mean = np.mean(contour_diffs)
+
+        # Center of the image and iterate through contours
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            contour_mid_point_diff = contour_mid_point_difference(y=y, h=h)
+
+            if (abs(contour_mid_point_diff) / self._image_width > self._contour_alignment_threshold and
+                (contour_mid_point_diff - contour_diffs_mean) / contour_diffs_std > self._contour_alignment_deviation):
+
+                character = self.image[y:y+h, x:x+w].copy()
+                cv2.drawContours(self.image, [contour], 0, (255), -1)
+
+                # Calculate new position and re-place
+                new_y = self._center_y - h // 2
+                self.image[new_y:new_y+h, x:x+w] = character
+
+        cv2.imshow('image', self.image)
+        cv2.waitKey(0)
