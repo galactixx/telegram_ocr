@@ -12,7 +12,8 @@ GROUND_TRUTH_DATA = {
     'image11.jpg': 'IOTX',
     'image12.jpg': 'IOTX',
     'image13.jpg': 'IOTX',
-    'image14.jpg': 'DUSK'
+    'image14.jpg': 'DUSK',
+    'image15.jpg': 'LQTY'
 }
 
 def ocr_evaluation(image_name: str, prediction: str) -> None:
