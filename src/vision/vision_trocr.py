@@ -52,6 +52,6 @@ class TrOCR(BaseVision):
         # Run inference on image
         output = self._model.generate(pixel_values)
         response = self._processor.batch_decode(output, skip_special_tokens=True)[0]
-        
+
         result = parse_ocr_response(response=response)
         return result

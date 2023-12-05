@@ -6,10 +6,17 @@ class OpenAIModels(Enum):
 
 class LocalModels(Enum):
     """All local models available."""
+
+    # Small models
+    TROCR_SMALL_PRINTED = 'microsoft/trocr-small-printed'
+    TROCR_SMALL_HAND_WRITTEN = 'microsoft/trocr-small-handwritten'
+
+    # Large models
     TROCR_LARGE_STR = 'microsoft/trocr-large-str'
     TROCR_LARGE_STAGE_1 = 'microsoft/trocr-large-stage1'
     TROCR_LARGE_PRINTED = 'microsoft/trocr-large-printed'
     TROCR_LARGE_HAND_WRITTEN = 'microsoft/trocr-large-handwritten'
+
 
 class ModelsDirectory(Enum):
     """All local models directories."""
