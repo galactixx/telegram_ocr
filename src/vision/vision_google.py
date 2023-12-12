@@ -10,28 +10,34 @@ from src.utils import (
     parse_ocr_response)
 
 class GoogleVision(BaseVision):
-    """Google AI vision API connection."""
+    """
+    Google AI vision API connection.
+    """
     def __init__(self):
         
         # Retrieve API key
-        self._api_key = os.environ['GOOGLE_API_KEY']
+        self._api_key = os.environ.get("GOOGLE_API_KEY")
         
         # The API key is blank or not set
         if not self._api_key:
             raise ValueError("GOOGLE_API_KEY is not set or is blank")
 
         self._client = vision.ImageAnnotatorClient(
-            client_options={'api_key': os.environ['GOOGLE_API_KEY']})
+            client_options={'api_key': self._api_key})
         
     def _process_image(self, image: MatLike) -> bytes:
-        """Transform open-cv image object into bytes."""
+        """
+        Transform open-cv image object into bytes.
+        """
 
         bytes_image = encode_image(image=image)
 
         return bytes_image
 
     def get_completion(self, image: MatLike) -> Optional[str]:
-        """Get text detection within image from Google AI vision API."""
+        """
+        Get text detection within image from Google AI vision API.
+        """
 
         bytes_image = self._process_image(image=image)
 

@@ -4,7 +4,8 @@ from src.vision.vision_openai import OpenAIVision
 from src.telegram.telegram import TelegramOCR
 from src.utils import (
     load_api_info,
-    source_data_directories)
+    source_data_directories
+)
 
 # Load in telegram api info
 telegram_info = load_api_info()
@@ -23,7 +24,10 @@ if __name__ == "__main__":
     )
 
     # Download any images sent by account in question
-    asyncio.run(telegram.stream_images_in_messages(
-        telegram_channel=telegram_info.channel,
-        telegram_channel_to_send=telegram_info.channel_to_send,
-        telegram_channel_keywords=telegram_info.channel_keywords))
+    asyncio.run(
+        telegram.stream_images_in_messages(
+            telegram_channel=telegram_info.channel,
+            telegram_channel_to_send=telegram_info.channel_to_send,
+            telegram_channel_keywords=telegram_info.channel_keywords
+        )
+    )

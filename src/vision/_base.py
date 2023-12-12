@@ -1,7 +1,9 @@
 from typing import Any
 
-from abc import ABC, abstractmethod
 from cv2.typing import MatLike
+from abc import (
+    ABC,
+    abstractmethod)
 
 class BaseVision(ABC):
     @abstractmethod

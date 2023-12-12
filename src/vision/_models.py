@@ -1,11 +1,16 @@
 from enum import Enum
 
 class OpenAIModels(Enum):
-    """All OpenAI models available through API"""
+    """
+    All OpenAI models available through API.
+    """
+
     GPT_4_VISION = 'gpt-4-vision-preview'
 
 class LocalModels(Enum):
-    """All local models available."""
+    """
+    All local models available.
+    """
 
     # Small models
     TROCR_SMALL_PRINTED = 'microsoft/trocr-small-printed'
@@ -19,5 +24,8 @@ class LocalModels(Enum):
 
 
 class ModelsDirectory(Enum):
-    """All local models directories."""
+    """
+    All local models directories.
+    """
+
     TROCR = './models/trocr'

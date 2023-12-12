@@ -11,10 +11,14 @@ from src.utils import (
     parse_ocr_response)
 
 class OpenAIVision(BaseVision):
-    """OpenAI vision API connection."""
-    def __init__(self,
-                 model_name: OpenAIModels = OpenAIModels.GPT_4_VISION,
-                 temperature: float = 1.0):
+    """
+    OpenAI vision API connection.
+    """
+    def __init__(
+        self,
+        model_name: OpenAIModels = OpenAIModels.GPT_4_VISION,
+        temperature: float = 1.0
+    ):
         self._model_name = model_name
         self._temperature = temperature
 
@@ -32,14 +36,18 @@ class OpenAIVision(BaseVision):
             raise ValueError(f'{model_name.value} is not a valid model name for OpenAI API')
         
     def _process_image(self, image: MatLike) -> bytes:
-        """Transform open-cv image object into bytes."""
+        """
+        Transform open-cv image object into bytes.
+        """
 
         bytes_base64_image = encode_image_base64(image=image)
 
         return bytes_base64_image
 
     def get_completion(self, prompt: str, image: MatLike) -> Optional[str]:
-        """Get prompt vision completion for image from OpenAI vision API."""
+        """
+        Get prompt vision completion for image from OpenAI vision API.
+        """
 
         bytes_base64_image = self._process_image(image=image)
 

@@ -16,4 +16,6 @@ if __name__ == "__main__":
     )
 
     # Set-up session for future use
-    asyncio.run(telegram.set_up_initial_authorization())
+    asyncio.run(
+        telegram.set_up_initial_authorization()
+    )

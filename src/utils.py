@@ -4,7 +4,6 @@ import base64
 import re
 from typing import Optional
 
-import numpy as np
 from dataclasses import dataclass
 import cv2
 from cv2.typing import MatLike
@@ -25,7 +24,9 @@ def clean_channel(channel: str) -> str:
     return channel.replace('@', '')
 
 def load_api_info() -> TelegramInfo:
-    """Load in all API info from both config file and environment variables."""
+    """
+    Load in all API info from both config file and environment variables.
+    """
 
     # Config variables
     TELEGRAM_CHANNEL = config['telegram_channel']
@@ -47,32 +48,42 @@ def load_api_info() -> TelegramInfo:
     )
 
 def source_data_directory(channel: str) -> None:
-    """Return source data directory."""
+    """
+    Return source data directory.
+    """
 
     return f"{config['data_dir']}/{clean_channel(channel=channel)}"
 
 def source_data_directories(channel: str) -> None:
-    """Create source data directories for parsed data."""
+    """
+    Create source data directories for parsed data.
+    """
 
     path = source_data_directory(channel=channel)
     os.makedirs(path, exist_ok=True)
 
 def encode_image(image: MatLike) -> bytes:
-    """Given MatLike object from cv2, return bytes representation of image."""
+    """
+    Given MatLike object from cv2, return bytes representation of image.
+    """
 
     _, img_encoded = cv2.imencode('.jpg', image)
     img_bytes = img_encoded.tobytes()
     return img_bytes
 
 def encode_image_base64(image: MatLike) -> bytes:
-    """Given MatLike object from cv2, return base64 representation of image."""
+    """
+    Given MatLike object from cv2, return base64 representation of image.
+    """
 
     img_bytes = encode_image(image=image)
     img_base64 = base64.b64encode(img_bytes).decode('utf-8')
     return img_base64
 
 def parse_ocr_response(response: str) -> Optional[str]:
-    """Logic to parse and clean the OCR response."""
+    """
+    Logic to parse and clean the OCR response.
+    """
     
     # Remove non-letter characters
     cleaned_response = re.sub('[^A-Za-z]+', '', response).strip().upper()

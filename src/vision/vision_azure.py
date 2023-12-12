@@ -14,7 +14,9 @@ from src.utils import (
     parse_ocr_response)
 
 class AzureVision(BaseVision):
-    """Microsoft Azure AI vision API connection."""
+    """
+    Microsoft Azure AI vision API connection.
+    """
     def __init__(self):
         self._key = os.environ['AZURE_API_KEY']
         self._endpoint = os.environ['AZURE_ENDPOINT']
@@ -31,14 +33,18 @@ class AzureVision(BaseVision):
             self._endpoint, CognitiveServicesCredentials(self._key))
         
     def _process_image(self, image: MatLike) -> bytes:
-        """Transform open-cv image object into bytes."""
+        """
+        Transform open-cv image object into bytes.
+        """
 
         bytes_image = encode_image(image=image)
 
         return bytes_image
 
     def get_completion(self, image: MatLike) -> Optional[str]:
-        """Get text detection within image from Azure vision API."""
+        """
+        Get text detection within image from Azure vision API.
+        """
 
         bytes_image = self._process_image(image=image)
 

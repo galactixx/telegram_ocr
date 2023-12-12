@@ -6,7 +6,9 @@ from src.vision.vision_google import GoogleVision
 from examples._evals import ocr_evaluation
 
 def example_ocr() -> str:
-    """Example of how Google OCR functions can be used."""
+    """
+    Example of how Google OCR functions can be used.
+    """
 
     # Instantiate Google vision
     google = GoogleVision()
@@ -21,7 +23,8 @@ def example_ocr() -> str:
 
         # Instantiate media parser
         media_parser = MediaParser(
-            media_loader=MediaLoader(media_path=media_path))
+            media_loader=MediaLoader(media_path=media_path)
+        )
         media_parser.remove_small_contours()
         
         response = google.get_completion(image=media_parser.image)

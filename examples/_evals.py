@@ -17,7 +17,9 @@ GROUND_TRUTH_DATA = {
 }
 
 def ocr_evaluation(image_name: str, prediction: str) -> None:
-    """Simple function to evaluate prediction with ground truth data."""
+    """
+    Simple function to evaluate prediction with ground truth data.
+    """
 
     prediction_result = prediction == GROUND_TRUTH_DATA[image_name]
     prediction_result_category = 'Correct' if prediction_result else 'Not Correct'

@@ -6,7 +6,9 @@ from src.vision.vision_trocr import TrOCR
 from examples._evals import ocr_evaluation
 
 def example_ocr() -> str:
-    """Example of how TrOCR functions can be used."""
+    """
+    Example of how TrOCR functions can be used.
+    """
 
     # Instantiate trocr ocr
     trocr_ocr = TrOCR()
@@ -21,7 +23,8 @@ def example_ocr() -> str:
 
         # Instantiate media parser
         media_parser = MediaParser(
-            media_loader=MediaLoader(media_path=media_path))
+            media_loader=MediaLoader(media_path=media_path)
+        )
         media_parser.remove_small_contours()
         media_parser.realign_and_center_contours()
         

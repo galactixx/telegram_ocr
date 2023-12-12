@@ -21,11 +21,17 @@ class MediaLoader:
             print('Extension of image path is not recognized...')
 
     def _load_image(self) -> MatLike:
-        """Load image as MatLike object."""
+        """
+        Load image as MatLike object.
+        """
+
         return cv2.imread(self._media_path)
 
     def _convert_mp4_to_jpg(self) -> MatLike:
-        """Convert mp4 to jpg for ease in image processing."""
+        """
+        Convert mp4 to jpg for ease in image processing.
+        """
+        
         cap = cv2.VideoCapture(self._media_path)
 
         # Check if the video opened successfully

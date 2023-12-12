@@ -6,7 +6,9 @@ from src.vision.vision_easyocr import EasyOCR
 from examples._evals import ocr_evaluation
 
 def example_ocr() -> str:
-    """Example of how easy OCR functions can be used."""
+    """
+    Example of how easy OCR functions can be used.
+    """
 
     # Instantiate easy ocr
     easy_ocr = EasyOCR()
@@ -21,7 +23,8 @@ def example_ocr() -> str:
 
         # Instantiate media parser
         media_parser = MediaParser(
-            media_loader=MediaLoader(media_path=media_path))
+            media_loader=MediaLoader(media_path=media_path)
+        )
         media_parser.remove_small_contours()
         
         response = easy_ocr.get_completion(image=media_parser.image)

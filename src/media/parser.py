@@ -14,16 +14,18 @@ class MediaParser:
     """
     Image pre-processing methods for OCR analysis.
     """
-    def __init__(self,
-                 media_loader: MediaLoader,
-                 pixel_threshold: int = 15000,
-                 inversion_threshold: int = 145,
-                 white_pixel_threshold: float = 0.0,
-                 light_grey_pixel_threshold: float = 0.30,
-                 contour_area_threshold: float = 0.008,
-                 contour_area_number_threshold: int = 100,
-                 contour_alignment_threshold: float = 0.15,
-                 contour_alignment_deviation: float = 1.50):
+    def __init__(
+        self,
+        media_loader: MediaLoader,
+        pixel_threshold: int = 15000,
+        inversion_threshold: int = 145,
+        white_pixel_threshold: float = 0.0,
+        light_grey_pixel_threshold: float = 0.30,
+        contour_area_threshold: float = 0.008,
+        contour_area_number_threshold: int = 100,
+        contour_alignment_threshold: float = 0.15,
+        contour_alignment_deviation: float = 1.50
+    ):
         self._media_loader = media_loader
         self._pixel_threshold = pixel_threshold
         self._inversion_threshold = inversion_threshold
@@ -55,14 +57,19 @@ class MediaParser:
         self.image = self._image_processing()
 
     def _kernel_choice(self) -> Tuple[int, NDArray]:
-        """Decide size of kernel and erosion iterations depending on size of image (pixels)."""
+        """
+        Decide size of kernel and erosion iterations depending on size of image (pixels).
+        """
+
         if self._image_area * self._white_pixel_percentage < self._pixel_threshold:
             return 3, np.ones((2, 2), np.uint8)
         else:
             return 4, np.ones((3, 3), np.uint8)
 
     def _calculate_pixels_percentage(self, image: MatLike, threshold: tuple) -> float:
-        """Calculate the percentage of white or near-white pixels using NumPy."""
+        """
+        Calculate the percentage of white or near-white pixels using NumPy.
+        """
 
         # Convert the image to RGB
         img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -73,7 +80,9 @@ class MediaParser:
         return white_pixels_percentage
 
     def _do_inversion(self, image: MatLike) -> MatLike:
-        """Invert the image only if it is white characters on black background."""
+        """
+        Invert the image only if it is white characters on black background.
+        s"""
 
         # Calculate the average pixel intensity
         average_intensity = np.mean(image)
@@ -84,7 +93,9 @@ class MediaParser:
         return image
 
     def _image_processing_white_characters(self) -> MatLike:
-        """Image pre-processing to highlight white characters."""
+        """
+        Image pre-processing to highlight white characters.
+        """
 
         # Generate threshold to highlight white characters
         _, thresh = cv2.threshold(self.image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -98,7 +109,9 @@ class MediaParser:
         return inverted
  
     def _image_processing_black_characters(self) -> MatLike:
-        """Image pre-processing to highlight black characters."""
+        """
+        Image pre-processing to highlight black characters.
+        """
 
         # Apply thresholding if your image is not binary
         _, thresh = cv2.threshold(self.image, 135, 255, cv2.THRESH_BINARY_INV)
@@ -109,7 +122,9 @@ class MediaParser:
         return eroded
     
     def _clahe_transformation(self, image: MatLike) -> MatLike:
-        """Clahe transformation on l-channel in image to increase contrast."""
+        """
+        Clahe transformation on l-channel in image to increase contrast.
+        """
 
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(3, 3))
             
@@ -123,7 +138,9 @@ class MediaParser:
         return lab_image
 
     def _basic_preprocessing(self, image: MatLike) -> MatLike:
-        """Basic image pre-processing."""
+        """
+        Basic image pre-processing.
+        """
 
         # Do clahe transformation only if there are no white/near-white pixels
         if (self._white_pixel_percentage == self._white_pixel_threshold and
@@ -136,7 +153,9 @@ class MediaParser:
         return blur
 
     def _image_processing(self) -> MatLike:
-        """Core image pre-processing."""
+        """
+        Core image pre-processing.
+        """
 
         if self._light_grey_pixel_percentage > self._light_grey_pixel_threshold:
             image = self._image_processing_black_characters()
@@ -146,7 +165,9 @@ class MediaParser:
         return image
 
     def remove_small_contours(self) -> None:
-        """If needed, remove small contours from image."""
+        """
+        If needed, remove small contours from image.
+        """
 
         # Find contours and hierarchy
         contours, _ = cv2.findContours(self.image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -160,7 +181,9 @@ class MediaParser:
                     cv2.drawContours(self.image, [contour], 0, (255), -1)
 
     def realign_and_center_contours(self) -> None:
-        """Re-align and center specific contours that are noticeably not centered."""
+        """
+        Re-align and center specific contours that are noticeably not centered.
+        """
 
         def contour_mid_point_difference(y: float, h: float) -> float:
             return (y + y + h) // 2 - self._center_y

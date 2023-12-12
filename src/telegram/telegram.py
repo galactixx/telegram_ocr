@@ -21,7 +21,8 @@ class TelegramOCR:
         telegram_app_id: int,
         telegram_app_hash: str,
         telegram_phone_number: str,
-        openai_vision: OpenAIVision):
+        openai_vision: OpenAIVision
+    ):
         self._telegram_app_id = telegram_app_id
         self._telegram_app_hash = telegram_app_hash
         self._telegram_phone_number = telegram_phone_number
@@ -48,7 +49,8 @@ class TelegramOCR:
         self,
         telegram_channel: str,
         telegram_channel_to_send: str,
-        telegram_channel_keywords: list) -> None:
+        telegram_channel_keywords: list
+    ) -> None:
         """Stream messages from Telegram channel and process images."""
 
         path_source_data_image = source_data_directory(channel=telegram_channel)
@@ -71,17 +73,22 @@ class TelegramOCR:
                 if isinstance(message_media, MessageMediaPhoto):
                     media_path = await self._client.download_media(
                         message_media.photo,
-                        f'{path_source_data_image}/{message.id}.jpg')
+                        f'{path_source_data_image}/{message.id}.jpg'
+                    )
                 elif isinstance(message_media, MessageMediaDocument):
                     if 'video/mp4' in message_media.document.mime_type:
                         media_path = await self._client.download_media(
                             message_media,
-                            f'{path_source_data_image}/{message.id}.mp4')
+                            f'{path_source_data_image}/{message.id}.mp4'
+                        )
 
                 # Media parser instantiation
                 if media_path is not None:
                     media_parser = MediaParser(
-                        media_loader=MediaLoader(media_path=media_path))
+                        media_loader=MediaLoader(
+                            media_path=media_path
+                        )
+                    )
                     if media_parser.image is not None:
                         media_parser.remove_small_contours()
 
@@ -90,7 +97,8 @@ class TelegramOCR:
 
                         response = self.openai_vision.get_completion(
                             prompt='What are the largest characters in this image? Only output the text in the image.',
-                            base64_image=base64_image)
+                            base64_image=base64_image
+                        )
                         
                         # Check if any keywords are in text of message
                         do_keywords = any(i for i in telegram_channel_keywords if i in message.text)
